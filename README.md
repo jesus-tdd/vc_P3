@@ -1,4 +1,71 @@
-C## Práctica 3. Detección y reconocimiento de formas
+# Práctica 3. Detección y reconocimiento de formas
+
+## Tarea 1: Detección de monedas
+
+Se detectan las monedas en cámara y se cuenta la cantidad de dinero.
+
+El código para esta tarea está separado en dos bloques: uno con funciones y otro con el bucle principal; de modo que el código fuera más limpio.
+
+Se debe seleccionar la moneda de referencia con un click.
+El valor de esta se puede editar en la variable `REF` del código, en el bloque de funciones.
+
+### Funciones
+A continuación se explican las funciones del bloque de funciones.
+
+#### `on_mouse()`
+Registra los clicks del ratón.
+
+
+#### `classify(d_px)`
+Una vez calculada la equivalencia entre píxeles y milímetros (en el bucle principal),
+se encarga de traducir esto al valor de una moneda a partir de su diámetro.
+
+La relación entre los diámetros de las monedas y su valor se almacena en el diccionario `CENT_DIAM_MM`.
+
+Esta función tiene una cierta tolerancia,
+se puede modificar en la variable `TOL_MM`.
+
+El método retorna una tupla con el valor de la moneda y su diámetro calculado en milímetros.
+
+#### `segment(frame)`
+Se encarga de realizar las operaciones necesarias en el fotograma de la cámara antes de proceder a la detección de las monedas.
+
+Primero se pasa la imagen a escala de grises y se le aplica un desenfoque gaussiano para reducir el ruido.
+
+Después, se umbraliza la imagen.
+Para reducir el efecto de elementos del ambiente como la iluminación, se ha usado una función de umbralizado adaptativa.
+De este modo, se ha logrado que el umbralizado se realizara teniendo encuenta los píxeles en la vecindad
+en lugar de los píxeles de toda la imagen.
+Al aplicar esto se ha observado una mejora sustancial en los resultados frente al umbralizado fijo.
+
+Por último, se hacen operaciones para eliminar el ruido causado por el umbralizado.
+Esto último ha sido un consejo de la Inteligencia Artificial Claude.ai. 
+
+El método retorna el fotograma tras las operaciones. 
+
+
+#### `detect(frame)`
+Es la función que,
+tras el umbralizado,
+realiza la detección de contornos.
+
+A los contornos detectados se les aplica un filtro de
+área, perímetro cerrado y circularidad para reducir el riesgo de errores.
+
+El área mínima se puede editar en la variable `MIN_AREA`.
+
+La circularidad mínima se puede editar en la variable `MIN_CIRC`.
+
+La función retorna una tupla con el contorno, su centro y su diámetro.
+
+### Bucle principal
+Emplea los métodos detallados anteriormente para detectar monedas a partir de los fotogramas de la cámara y calcular su valor total.
+
+Además, una vez seleccionada la moneda de referencia,
+se muestra el valor de cada moneda detectada por separado.
+
+----
+#### Original
 
 ### Contenidos
 
