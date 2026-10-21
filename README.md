@@ -9,8 +9,10 @@ El código para esta tarea está separado en dos bloques: uno con funciones y ot
 Se debe seleccionar la moneda de referencia con un click.
 El valor de esta se puede editar en la variable `REF` del código, en el bloque de funciones.
 
+
 ### Funciones
 A continuación se explican las funciones del bloque de funciones.
+
 
 #### `on_mouse()`
 Registra los clicks del ratón.
@@ -26,6 +28,7 @@ Esta función tiene una cierta tolerancia,
 se puede modificar en la variable `TOL_MM`.
 
 El método retorna una tupla con el valor de la moneda y su diámetro calculado en milímetros.
+
 
 #### `segment(frame)`
 Se encarga de realizar las operaciones necesarias en el fotograma de la cámara antes de proceder a la detección de las monedas.
@@ -58,64 +61,75 @@ La circularidad mínima se puede editar en la variable `MIN_CIRC`.
 
 La función retorna una tupla con el contorno, su centro y su diámetro.
 
+
 ### Bucle principal
 Emplea los métodos detallados anteriormente para detectar monedas a partir de los fotogramas de la cámara y calcular su valor total.
 
 Además, una vez seleccionada la moneda de referencia,
 se muestra el valor de cada moneda detectada por separado.
 
-----
-#### Original
 
-### Contenidos
+## Tarea 2: Clasificador
 
-[Aspectos cubiertos](#31-aspectos-cubiertos)  
-[Entrega](#32-entrega)
-
-### 3.1. Aspectos cubiertos
-
-En esta práctica el objetivo es adquirir nociones para extraer información geométrica de objetos presentes en una imagen, con el fin de caracterizarlos y posteriormente ser capaz de identificarlos de forma automática en categorías. Si bien se reitera en el apartado de la entgera, **no se plantea** para la resolución de las tareas, la utilización de **modelos de aprendizaje profundo**. El cuaderno de la práctica, *VC_P3.ipynb*, contiene diversos ejemplos mostrando variantes para la detección de objetos presentes en la imagen, como paso previo a su caracterización geométrica. En este sentido, se plantea el uso del umbralizado y la detección de contornos. Para el caso concreto de monedas, se considera también la utilización de la transformada de Hough para la localización de formas circulares.
+El código para esta tarea está separado en 4 celdas.
 
 
-Si bien no es necesario instalar paquetes adicionales para las primeras celdas del cuaderno, de cara a poder obtener la matriz de confusión, es requisito instalar en el *environment* los paquetes *scikit-learn* y *seaborn* para disponer de utilidades para el cálculo de [métricas](https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall?hl=es-419). Con *pip* sería algo como:
+### Celda 1. Segmentación
 
-```
-pip install scikit-learn seaborn
-```
+Para la detección de partículas se tiene en cuenta el color del fondo, 
+estimado mediante el cálculo de la mediana de los píxeles de la imagen.
 
-### 3.2. Entrega
+Una característica a tener en cuenta es el color de las partículas,
+tanto para no perder partículas claras
+como para distinguir de forma más precisa entre los tipos de las mismas.
+Para facilitar la detección del color (principalmente de la intensidad del mismo), la imagen se trabaja en formato LAB. 
 
-Para la entrega de esta práctica, son **dos las tareas planteadas**. Para ninguna de ellas deben integrar modelos de **aprendizaje profundo**:
+Para el umbralizado de la imagen,
+se hace uso de *Otsu* para calcular el factor de umbralizado.
 
-- En la **primera tarea**, el reto o tarea consiste en determinar la cantidad de dinero y monedas presentes en la imagen captada en vivo con la webcam. Una extensión válida sería la presencia de objetos que no sean monedas en la imagen analizada.
+Salvando los detalles mencionados,
+el proceso de segmentación es análogo al de la **tarea 1**. 
 
-- En la **segunda tarea**, deben desarrollar un procedimiento que extraiga partículas de una imagen de test, y las clasifique en tres clases posibles. Deben tener claro que la imagen de test no puede utilizarse para ajustar el procedimiento, para ello cuentan con las imágenes de entrenamiento. En este sentido, además de la imagen de test *MPs_test.jpg* con su correspondiente archivo de anotaciones *MPs_test_bbs.csv*, se proporcionan de cara al entrenamiento, imágenes de tres clases de objetos recogidos en playas canarias: fragmentos plásticos, *pellets* y alquitrán. Para cada categoría se proporciona una imagen completa y una subimagen de la misma. Las dos primeras categorías se consideran microplásticos cuando miden menos de 5mm, mientras que la tercera es muy habitual encontrarlas en playas canarias. Observar que dado que cada imagen contiene muestras de una única categoría, a efectos prácticos disponen de un conjunto de datos anotado. La tarea propuesta consiste en hacer uso de las imágenes de entrenamiento proporcionadas, extraer de forma automatizada las partículas e identificar patrones en sus características geométricas y de apariencia o entrenar un clasificador con ellas, que puedan permitir la clasificación de las partículas en la imagen de test. El resultado obtenido en la imagen de test, debe mostrarse por medio las métricas mostradas en el cuaderno, incluyendo la matriz de confusión, donde se comparan las anotaciones con las predicciones.
+El resultado de la celda son las imágenes de entrenamiento y test 
+con el contorno de las partículas encontradas trazado en verde.
+Esto se ha usado para calibrar el área máxima y mínima, así como el umbralizado mínimo.
 
-![Confusión](MatrizConfu.png)  
-*Ejemplo de matriz de confusión*
-
-A la hora de considerar posibles características geométricas, como punto de partida para la extracción de descriptores de las partículas, se proporciona enlace al trabajo [SMACC: A System for Microplastics Automatic Counting and Classification](https://doi.org/10.1109/ACCESS.2020.2970498) en el que se adoptan algunas propiedades geométricas para dicho fin. De forma resumida, las características geométricas utilizadas en dicho trabajo fueron:
-
-- Área en píxeles (A)
-- Perímetro en píxeles (P)
-- Compacidad (relación del cuadrado del perímetro con el área C=P^2/A)
-- Relación del área de la partícula con el área del contenedor que la contiene
-- Relación del ancho y el alto del contenedor
-- Relación entre los ejes de la elipse ajustada
-- Definido el centroide, relación entre las distancias menor y mayor al contorno
-
-En relación a la segmentación de las partículas, una probable primera observación es que la aplicación del umbralizado para separarlas del fondo, es delicada. Preprocesamiento como el ecualizado del histograma, suavizar la imagen de entrada o reducir su tamaño, o aplicar heurísticas basadas en el tamaño mínimo y máximo de los contornos localizados, y la distancia mínima entre ellos, pueden ayudar a filtrar falsas detecciones, pero a pesar de ello, será un desafío obtener una separación perfecta para todas las imágenes con la misma estrategia. Añadir, que la imagen de fragmentos contiene unas 80 partículas, la de *pellets* unas 55 y la de alquitrán unas 54.
-
-<!--
-![Contornos](Output.jpg)  
-*Ejemplo ilustrativo contornos detectados en la imagen de fragmentos*
-
-Si quieren ir más allá, sugerir explorar técnicas de segmentación recientes y potentes como [Segment anything o SAM](https://segment-anything.com) o [OneFormer](https://github.com/SHI-Labs/OneFormer), y extensiones como , [SAM 2](https://github.com/facebookresearch/segment-anything-2), [FastSAM](https://github.com/CASIA-IVA-Lab/FastSAM) o [Count anything](https://github.com/ylqi/Count-Anything). No duden en compartir otras alternativas que descubran.-->
-
-Como en las prácticas previas, la entrega se realizará a través del campus virtual, remitiendo un enlace al repositorio **github**, donde se alojará el **cuaderno o cuadernos** de resolución de las tareas, además de su correspondiente **README** describiendo el proceso adoptado para resolver cada tarea, detallar la asistencia recibida por herramientas de IA, integrando de imágenes ilustrativas, además de las métricas obtenidas y matriz de confusión de la segunda tarea.
-
-<!---Momentos en trabajo de Nayar sobre Binary images https://cave.cs.columbia.edu/Statics/monographs/Binary%20Images%20FPCV-1-3.pdf -->
+Los factores previamente mencionados son configurables en las variables `MAX_AREA`, `MIN_AREA` y `MIN_T` respectivamente.
 
 
-***
-Bajo licencia de Creative Commons Reconocimiento - No Comercial 4.0 Internacional
+### Celda 2. Detección de características
+
+En esta celda se calculan las características que se utilizarán para clasificar las partículas:
+- Circularidad
+- Solidez (rugosidad)
+- Relación de ejes
+- Saturación
+- Brillo respecto al fondo
+
+Los pellets poseen circularidad alta y colores apagados.
+Los fragmentos tienen formas irregulares y colores vivos.
+El alquitrán es oscuro y rugoso.
+
+
+### Celda 3. Entrenamiento del clasificador
+
+Como las imágenes de entrenamiento únicamente poseen un tipo de partícula,
+el clasificador aprende qué características representan a cada tipo a partir de ellas.
+
+En el diagrama de cajas mostrado al ejecutar la celda,
+se aprecia la diferencia entre la distribución de las características
+para cada tipo de partícula.
+
+
+### Celda 4. Resultado
+
+En esta celda se pone el clasificador a prueba,
+evaluando los resultados obtenidos frente a los esperados
+mediante una matriz de confusión.
+
+En la matriz, se observa que el clasificador distingue casi a la perfección los fragmentos de las otras partículas.
+El alquitrán, por su parte, parece causarle más problemas, aunque mantiene una proporción alta de aciertos.
+Por último, se observa que tiene tendencia a confundir los pellets con fragmentos.
+
+El clasificador ha pasado por alto 86 partículas de la imagen test.
+Teniendo en cuenta las partículas detectadas, ha obtenido una precisión del 79,4%. 
